@@ -2,6 +2,8 @@
 
 基於 Flask 的「奧修禪卡線上占卜」示範專案。
 
+![Osho01](./images/Osho01.jpg)
+
 ## 本地執行
 
 1. 建議使用虛擬環境（venv 或 Conda）。
