@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}首頁 · 奧修禪卡線上占卜{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <h1>奧修禪卡線上占卜</h1>
+    <p>在當下，讓卡牌映照你的內在狀態，帶來清明與指引。</p>
+    <form action="{{ url_for('draw') }}" method="post">
+      <button class="btn btn-primary" type="submit">開始抽卡</button>
+    </form>
+  </section>
+
+  <section class="intro">
+    <h2>如何使用</h2>
+    <ol>
+      <li>深呼吸，輕輕將注意力帶回此刻。</li>
+      <li>按下「開始抽卡」。</li>
+      <li>閱讀卡牌訊息，觀照內心的回應。</li>
+    </ol>
+  </section>
+{% endblock %}
+
+

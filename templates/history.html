@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}歷史記錄 · 奧修禪卡{% endblock %}
+
+{% block content %}
+  <section class="history">
+    <h1>歷史記錄</h1>
+    {% if history %}
+      <ul class="history-list">
+        {% for item in history %}
+          <li class="history-item">
+            <div class="meta">
+              <span class="name">{{ item.name }}</span>
+              {% if item.suit %}<span class="suit">{{ item.suit }}</span>{% endif %}
+              {% if item.key %}<span class="key">{{ item.key }}</span>{% endif %}
+            </div>
+            <div class="time">{{ item.time }}</div>
+            <div class="meaning">{{ item.meaning }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>目前尚無歷史記錄。</p>
+    {% endif %}
+
+    <div class="actions">
+      <a class="btn" href="{{ url_for('index') }}">返回首頁</a>
+    </div>
+  </section>
+{% endblock %}
+
+

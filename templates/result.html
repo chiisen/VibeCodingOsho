@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}抽卡結果 · 奧修禪卡{% endblock %}
+
+{% block content %}
+  <section class="result">
+    <h1>抽卡結果</h1>
+    <div class="card">
+      <div class="card-meta">
+        <div class="card-name">{{ result.name }}</div>
+        {% if result.suit %}<div class="card-suit">{{ result.suit }}</div>{% endif %}
+        {% if result.key %}<div class="card-key">{{ result.key }}</div>{% endif %}
+        <div class="card-time">{{ result.time }}</div>
+      </div>
+      <div class="card-meaning">
+        <p>{{ result.meaning }}</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <form action="{{ url_for('draw') }}" method="post">
+        <button class="btn" type="submit">再抽一張</button>
+      </form>
+      <a class="btn btn-secondary" href="{{ url_for('history') }}">查看歷史</a>
+      <a class="btn btn-link" href="{{ url_for('index') }}">返回首頁</a>
+    </div>
+  </section>
+{% endblock %}
+
+

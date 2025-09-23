@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}奧修禪卡線上占卜{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav">
+        <a href="{{ url_for('index') }}" class="brand">奧修禪卡</a>
+        <div class="links">
+          <a href="{{ url_for('index') }}">首頁</a>
+          <a href="{{ url_for('history') }}">歷史記錄</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <p>© {{ 2025 }} VibeCodingOsho · 以覺察、臨在、喜悅為指南</p>
+    </footer>
+  </body>
+  </html>
+
+
