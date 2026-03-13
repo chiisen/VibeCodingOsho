@@ -3,9 +3,9 @@
 {% block title %}抽卡結果 · 奧修禪卡{% endblock %}
 
 {% block content %}
-  <section class="result">
-    <h1>抽卡結果</h1>
-    <div class="card">
+  <section class="result" aria-labelledby="result-title">
+    <h1 id="result-title">抽卡結果</h1>
+    <div class="card" role="article" aria-label="抽到的卡牌">
       <div class="card-meta">
         <div class="card-name">{{ result.name }}</div>
         {% if result.suit %}<div class="card-suit">{{ result.suit }}</div>{% endif %}
@@ -17,8 +17,9 @@
       </div>
     </div>
 
-    <div class="actions">
+    <div class="actions" role="group" aria-label="操作按鈕">
       <form action="{{ url_for('draw') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <button class="btn" type="submit">再抽一張</button>
       </form>
       <a class="btn btn-secondary" href="{{ url_for('history') }}">查看歷史</a>

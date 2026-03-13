@@ -3,12 +3,12 @@
 {% block title %}歷史記錄 · 奧修禪卡{% endblock %}
 
 {% block content %}
-  <section class="history">
-    <h1>歷史記錄</h1>
+  <section class="history" aria-labelledby="history-title">
+    <h1 id="history-title">歷史記錄</h1>
     {% if history %}
-      <ul class="history-list">
+      <ul class="history-list" role="list" aria-label="抽卡歷史記錄">
         {% for item in history %}
-          <li class="history-item">
+          <li class="history-item" role="listitem">
             <div class="meta">
               <span class="name">{{ item.name }}</span>
               {% if item.suit %}<span class="suit">{{ item.suit }}</span>{% endif %}
@@ -20,7 +20,7 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>目前尚無歷史記錄。</p>
+      <p aria-live="polite">目前尚無歷史記錄。</p>
     {% endif %}
 
     <div class="actions">

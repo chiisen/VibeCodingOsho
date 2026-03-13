@@ -1,24 +1,64 @@
 import json
+import logging
 import os
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import lru_cache
 
+import redis
 from flask import Flask, render_template, session, redirect, url_for, request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_session import Session
+from flask_wtf.csrf import CSRFProtect
 
 
-def create_app() -> Flask:
+def create_app(test_config: dict | None = None) -> Flask:
     app = Flask(__name__, static_folder="static", template_folder="templates")
-    # 開發用預設金鑰，正式環境請用環境變數覆蓋
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
+
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=getattr(logging, log_level, logging.INFO),
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    logger = logging.getLogger("vibecodingosho")
+
+    redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+    app.config["SESSION_TYPE"] = "redis"
+    app.config["SESSION_PERMANENT"] = False
+    app.config["SESSION_USE_SIGNER"] = True
+    app.config["SESSION_KEY_PREFIX"] = "vibecodingosho:"
+    app.config["SESSION_REDIS"] = redis.from_url(redis_url)
+    Session(app)
+
+    secret_key = os.environ.get("FLASK_SECRET_KEY")
+    if not secret_key:
+        raise ValueError("FLASK_SECRET_KEY 環境變數未設定，請設定後再啟動應用程式")
+    app.secret_key = secret_key
+    csrf = CSRFProtect(app)
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"],
+    )
+
+    @app.context_processor
+    def inject_globals():
+        return {"current_year": datetime.now(timezone.utc).year}
 
     @lru_cache(maxsize=1)
     def get_cards() -> list[dict]:
         """載入並快取卡牌資料。"""
         data_path = os.path.join(os.path.dirname(__file__), "data", "cards.json")
-        with open(data_path, "r", encoding="utf-8") as f:
-            payload = json.load(f)
-        return payload.get("cards", [])
+        try:
+            with open(data_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+            return payload.get("cards", [])
+        except FileNotFoundError:
+            raise RuntimeError(f"卡牌資料檔案不存在: {data_path}")
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"卡牌資料 JSON 格式錯誤: {e}")
 
     def add_history(entry: dict) -> None:
         history = session.get("history", [])
@@ -28,20 +68,40 @@ def create_app() -> Flask:
 
     @app.after_request
     def add_cache_headers(resp):  # type: ignore[override]
-        # 靜態資源長快取
         if request.path.startswith("/static/"):
             resp.headers["Cache-Control"] = "public, max-age=604800, immutable"
+        resp.headers["X-Content-Type-Options"] = "nosniff"
+        resp.headers["X-Frame-Options"] = "DENY"
+        resp.headers["X-XSS-Protection"] = "1; mode=block"
         return resp
+
+    @app.errorhandler(429)
+    def rate_limit_exceeded(e):
+        return render_template(
+            "error.html", code=429, message="請求過於頻繁，請稍後再試"
+        ), 429
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template("error.html", code=404, message="找不到您要的頁面"), 404
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        return render_template(
+            "error.html", code=500, message="伺服器發生錯誤，請稍後再試"
+        ), 500
 
     @app.route("/")
     def index():
         return render_template("index.html")
 
     @app.route("/draw", methods=["POST", "GET"])
+    @limiter.limit("10 per minute")
     def draw():
+        logger.info("使用者請求抽卡")
         cards = get_cards()
         if not cards:
-            # 沒有卡牌資料時回首頁並提示（簡化處理，可擴充為閃訊息）
+            logger.warning("卡牌資料為空，導回首頁")
             return redirect(url_for("index"))
 
         card = random.choice(cards)
@@ -50,11 +110,12 @@ def create_app() -> Flask:
             "suit": card.get("suit"),
             "key": card.get("key"),
             "meaning": card.get("meaning"),
-            "time": datetime.utcnow().isoformat() + "Z",
+            "time": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
 
         session["last_result"] = entry
         add_history(entry)
+        logger.info(f"抽卡成功: {entry['name']}")
         return redirect(url_for("result"))
 
     @app.route("/result")
@@ -76,10 +137,9 @@ app = create_app()
 
 
 if __name__ == "__main__":
+    debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() in ("1", "true", "yes")
     app.run(
         host="127.0.0.1",
         port=int(os.environ.get("PORT", 5000)),
-        debug=True,
+        debug=debug_mode,
     )
-
-
