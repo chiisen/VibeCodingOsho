@@ -73,6 +73,12 @@ def create_app(test_config: dict | None = None) -> Flask:
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["X-Frame-Options"] = "DENY"
         resp.headers["X-XSS-Protection"] = "1; mode=block"
+        resp.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+        resp.headers["Content-Security-Policy"] = (
+            "default-src 'self'; style-src 'self' 'unsafe-inline'"
+        )
         return resp
 
     @app.errorhandler(429)
