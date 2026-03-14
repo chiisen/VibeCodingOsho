@@ -2,7 +2,7 @@
 
 基於 Flask 的「奧修禪卡線上占卜」示範專案。
 
-![Osho01](./images/Osho01.jpg)
+![Osho01](./images/Osho01.png)
 
 ## 本地執行
 
